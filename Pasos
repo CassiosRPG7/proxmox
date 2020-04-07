@@ -1,0 +1,35 @@
+###########################################################################
+#Redimensionar el volumen lógico de la instalación por defecto
+df -h
+
+    lvremove /dev/pve/data
+
+    lvresize -l +100%FREE /dev/pve/root
+
+    resize2fs /dev/mapper/pve-root
+
+df -h
+
+############################################################################
+#Actualizar repositorios
+vi /etc/apt/sources.list
+
+deb http://ftp.debian.org/debian buster main non-free contrib
+
+deb http://ftp.debian.org/debian buster-updates main non-free contrib
+
+# security updates
+deb http://security.debian.org buster/updates main non-free contrib
+
+deb http://download.proxmox.com/debian buster pve-no-subscription
+
+apt update
+apt dist-upgrade
+############################################################################
+#Solución non-subscription
+sed -i.bak "s/data.status !== 'Active'/false/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js && systemctl restart pveproxy.service
+
+############################################################################
+#Corregir el replication runner syslog del proxmox
+systemctl edit --full pvesr.timer
+#cambiar "minutely por monthly"
